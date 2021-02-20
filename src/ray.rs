@@ -5,11 +5,16 @@ use crate::vector::{Color, Point3D, Vector3D, N};
 pub struct Ray {
     origin: Point3D,
     direction: Vector3D,
+    time: N,
 }
 
 impl Ray {
-    pub fn new(origin: Point3D, direction: Vector3D) -> Self {
-        Self { origin, direction }
+    pub fn new(origin: Point3D, direction: Vector3D, time: N) -> Self {
+        Self {
+            origin,
+            direction,
+            time,
+        }
     }
 
     #[inline]
@@ -20,6 +25,11 @@ impl Ray {
     #[inline]
     pub fn direction(&self) -> &Vector3D {
         &self.direction
+    }
+
+    #[inline]
+    pub fn time(&self) -> &N {
+        &self.time
     }
 
     #[inline]

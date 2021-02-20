@@ -48,7 +48,7 @@ impl Material for Glass {
                 super::refract(&unit_direction, &hit_record.normal, refraction_ratio)
             };
 
-        *scattered = Ray::new(hit_record.p, direction);
+        *scattered = Ray::new(hit_record.p, direction, *r_in.time());
 
         true
     }

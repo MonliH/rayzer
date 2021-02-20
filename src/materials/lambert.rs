@@ -15,7 +15,7 @@ impl Lambert {
 impl Material for Lambert {
     fn scatter(
         &self,
-        _: &Ray,
+        r_in: &Ray,
         hit_record: &mut HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
@@ -25,7 +25,7 @@ impl Material for Lambert {
             scatter_direction = hit_record.normal;
         }
 
-        *scattered = Ray::new(hit_record.p, scatter_direction);
+        *scattered = Ray::new(hit_record.p, scatter_direction, *r_in.time());
         *attenuation = self.0;
         true
     }

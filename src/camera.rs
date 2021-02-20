@@ -10,6 +10,8 @@ pub struct Camera {
     lens_radius: N,
     u: Vector3D,
     v: Vector3D,
+    time_0: N,
+    time_1: N,
 }
 
 impl Camera {
@@ -21,6 +23,8 @@ impl Camera {
         aspect_ratio: N,
         aperature: N,
         focus_distance: N,
+        time_0: Option<N>,
+        time_1: Option<N>,
     ) -> Self {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -47,6 +51,8 @@ impl Camera {
             u,
             v,
             lens_radius,
+            time_0: time_0.unwrap_or(0.0),
+            time_1: time_1.unwrap_or(0.0),
         }
     }
 
@@ -58,6 +64,7 @@ impl Camera {
         Ray::new(
             self.origin + offset,
             self.lower_left_corner + self.horizontal * s + self.vertical * t - self.origin - offset,
+            utils::random_range(self.time_0, self.time_1),
         )
     }
 }

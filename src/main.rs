@@ -17,7 +17,7 @@ use std::sync::Arc;
 use indicatif::ProgressBar;
 
 use camera::Camera;
-use hittables::{Hittables, Sphere};
+use hittables::{Hittables, MovingSphere, Sphere};
 use materials::{Glass, Lambert, Material, Metal};
 use utils::{random_n, random_range};
 use vector::{Color, Point3D, Vector3D, N};
@@ -42,7 +42,16 @@ fn random_scene() -> Hittables {
             if (center - Point3D::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let material: Arc<dyn Material + Send + Sync> = if choose_material < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    Arc::new(Lambert::new(albedo))
+                    let center2 = center + Vector3D::new(0.0, random_range(0.0, 0.5), 0.0);
+                    world.add(Box::new(MovingSphere::new(
+                        center,
+                        center2,
+                        0.0,
+                        1.0,
+                        0.2,
+                        Arc::new(Lambert::new(albedo)),
+                    )));
+                    continue;
                 } else if choose_material < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let roughness = random_range(0.0, 0.5);
@@ -80,8 +89,8 @@ fn random_scene() -> Hittables {
     world
 }
 
-const ASPECT_RATIO: N = 3.0 / 2.0;
-const SAMPLES_PER_PIXEL: usize = 512;
+const ASPECT_RATIO: N = 16.0 / 9.0;
+const SAMPLES_PER_PIXEL: usize = 100;
 const MAX_DEPTH: usize = 50;
 
 lazy_static! {
@@ -102,13 +111,15 @@ lazy_static! {
             ASPECT_RATIO,
             aperature,
             focus_distance,
+            Some(0.0),
+            Some(1.0)
         )
     };
 }
 
 fn main() {
     // Image dimensions
-    let image_width: usize = 1200;
+    let image_width: usize = 400;
     let image_height = ((image_width as N) / ASPECT_RATIO) as usize;
 
     // Set up PNG encoder
