@@ -14,6 +14,11 @@ pub fn random_range(start: N, end: N) -> N {
 }
 
 #[inline]
+pub fn random_int_range(start: usize, end: usize) -> usize {
+    rand::thread_rng().gen_range(start..end)
+}
+
+#[inline]
 pub fn clamp(x: N, start: N, end: N) -> N {
     if x < start {
         start

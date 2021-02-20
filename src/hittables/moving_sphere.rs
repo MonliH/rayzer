@@ -1,8 +1,9 @@
-use super::{HitRecord, Hittable};
+use super::{HitRecord, Hittable, AABB};
 use crate::materials::SharedMaterial;
 use crate::ray::Ray;
-use crate::vector::{Point3D, N};
+use crate::vector::{Point3D, Vector3D, N};
 
+#[derive(Clone)]
 pub struct MovingSphere {
     center0: Point3D,
     center1: Point3D,
@@ -64,6 +65,19 @@ impl Hittable for MovingSphere {
         rec.set_face_normal(ray, outward_normal);
         rec.material = self.material.clone();
 
-        return true;
+        true
+    }
+
+    fn bounding_box(&self, time0: N, time1: N, output_box: &mut AABB) -> bool {
+        let box0 = AABB::new(
+            self.center(&time0) - Vector3D::new(self.radius, self.radius, self.radius),
+            self.center(&time0) + Vector3D::new(self.radius, self.radius, self.radius),
+        );
+        let box1 = AABB::new(
+            self.center(&time1) - Vector3D::new(self.radius, self.radius, self.radius),
+            self.center(&time1) + Vector3D::new(self.radius, self.radius, self.radius),
+        );
+        *output_box = box0.surrounding_box(&box1);
+        true
     }
 }

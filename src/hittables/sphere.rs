@@ -1,8 +1,9 @@
-use super::{HitRecord, Hittable};
+use super::{HitRecord, Hittable, AABB};
 use crate::materials::SharedMaterial;
 use crate::ray::Ray;
-use crate::vector::{Point3D, N};
+use crate::vector::{Point3D, Vector3D, N};
 
+#[derive(Clone)]
 pub struct Sphere {
     center: Point3D,
     radius: N,
@@ -46,6 +47,14 @@ impl Hittable for Sphere {
         rec.set_face_normal(ray, outward_normal);
         rec.material = self.material.clone();
 
-        return true;
+        true
+    }
+
+    fn bounding_box(&self, _: N, _: N, output_box: &mut AABB) -> bool {
+        *output_box = AABB::new(
+            self.center - Vector3D::new(self.radius, self.radius, self.radius),
+            self.center + Vector3D::new(self.radius, self.radius, self.radius),
+        );
+        true
     }
 }

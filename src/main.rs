@@ -17,8 +17,8 @@ use std::sync::Arc;
 use indicatif::ProgressBar;
 
 use camera::Camera;
-use hittables::{Hittables, MovingSphere, Sphere};
-use materials::{Glass, Lambert, Material, Metal};
+use hittables::{BvhNode, Hittables, MovingSphere, Sphere};
+use materials::{Glass, Lambert, Metal, SharedMaterial};
 use utils::{random_n, random_range};
 use vector::{Color, Point3D, Vector3D, N};
 
@@ -26,7 +26,7 @@ fn random_scene() -> Hittables {
     let mut world = Hittables::new();
 
     let groud_material = Arc::new(Lambert::new(Color::new(0.5, 0.5, 0.5)));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3D::new(0.0, -1000.0, 0.0),
         1000.0,
         groud_material,
@@ -40,10 +40,10 @@ fn random_scene() -> Hittables {
             let center = Point3D::new(0.9 * random_n() + a as N, 0.2, 0.9 * random_n() + b as N);
 
             if (center - Point3D::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let material: Arc<dyn Material + Send + Sync> = if choose_material < 0.8 {
+                let material: SharedMaterial = if choose_material < 0.8 {
                     let albedo = Color::random() * Color::random();
                     let center2 = center + Vector3D::new(0.0, random_range(0.0, 0.5), 0.0);
-                    world.add(Box::new(MovingSphere::new(
+                    world.add(Arc::new(MovingSphere::new(
                         center,
                         center2,
                         0.0,
@@ -60,33 +60,37 @@ fn random_scene() -> Hittables {
                     Arc::new(Glass::new(1.5))
                 };
 
-                world.add(Box::new(Sphere::new(center, 0.2, material)));
+                world.add(Arc::new(Sphere::new(center, 0.2, material)));
             }
         }
     }
 
     let material1 = Arc::new(Glass::new(1.5));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3D::new(0.0, 1.0, 0.1),
         1.0,
         material1,
     )));
 
     let material2 = Arc::new(Lambert::new(Color::new(0.0, 0.5, 1.0)));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3D::new(-4.0, 1.0, 0.1),
         1.0,
         material2,
     )));
 
     let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3D::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
 
-    world
+    let mut hittables = Hittables::new();
+    let mut world = world.into_vec();
+    let len = world.len();
+    hittables.add(Arc::new(BvhNode::new(&mut world, 0, len, 0.0, 0.0)));
+    hittables
 }
 
 const ASPECT_RATIO: N = 16.0 / 9.0;

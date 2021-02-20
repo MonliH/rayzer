@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use super::AABB;
 use crate::materials::{Lambert, SharedMaterial};
 use crate::ray::Ray;
 use crate::vector::{Color, Point3D, Vector3D, N};
@@ -38,15 +39,22 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: N, t_max: N, rec: &mut HitRecord) -> bool;
+    fn bounding_box(&self, time0: N, time1: N, output_box: &mut AABB) -> bool;
 }
 
-pub struct Hittables(Vec<Box<dyn Hittable + Sync + Send>>);
+pub type SharedHittableTraitObj = Arc<dyn Hittable + Sync + Send>;
+
+pub struct Hittables(Vec<SharedHittableTraitObj>);
 impl Hittables {
     pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    pub fn add(&mut self, item: Box<dyn Hittable + Sync + Send>) {
+    pub fn into_vec(self) -> Vec<SharedHittableTraitObj> {
+        self.0
+    }
+
+    pub fn add(&mut self, item: SharedHittableTraitObj) {
         self.0.push(item);
     }
 
@@ -70,5 +78,27 @@ impl Hittable for Hittables {
         }
 
         hit_anything
+    }
+
+    fn bounding_box(&self, time0: N, time1: N, output_box: &mut AABB) -> bool {
+        if self.0.is_empty() {
+            return false;
+        }
+
+        let mut first_box = true;
+        let mut temp_box = AABB::default();
+        for obj in &self.0 {
+            if !obj.bounding_box(time0, time1, &mut temp_box) {
+                return false;
+            }
+            *output_box = if first_box {
+                temp_box.clone()
+            } else {
+                output_box.surrounding_box(&temp_box)
+            };
+            first_box = false;
+        }
+
+        true
     }
 }
