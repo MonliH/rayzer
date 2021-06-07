@@ -22,7 +22,9 @@ pub fn sample(
         threads.push(spawn(move || {
             let mut buf = Vec::with_capacity(image_height * image_width);
             for j in (0..image_height).rev() {
-                new_progress.inc(1);
+                if j % 100 == 0 {
+                    new_progress.inc(100);
+                }
                 for i in 0..image_width {
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                     for _ in 0..(samples_per_pixel / num_cpus::get()) {
